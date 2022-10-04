@@ -1,0 +1,63 @@
+// controller deal w/ api
+package com.jupiter.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jupiter.service.GameService;
+import com.jupiter.service.TwitchException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+/**
+ * @author qiyuanc
+ * @Description
+ * @date 2022/2/22 22:22
+ */
+@Controller //加上才可以访问 annatation 调用@Service 业务逻辑
+public class GameController {
+
+    // /game?game_name=whatever value 等于这个 whatever
+    // /game
+
+
+//    @Autowired
+//    private GameService gameService;
+
+    private final GameService gameService;
+
+    @Autowired // dependency inspection用构造函数实现
+    public GameController(GameService gameService) {
+        this.gameService = gameService;
+    }
+
+
+
+
+    @RequestMapping(value = "/game", method = RequestMethod.GET)
+    public void getGame(@RequestParam(value = "game_name", required = false) String gameName, HttpServletResponse response) throws IOException, ServletException {
+        response.setContentType("application/json;charset=UTF-8");
+        try {
+            // Return the dedicated game information if gameName is provided in the request URL, otherwise return the top x games.
+            if (gameName != null) {
+                response.getWriter().print(new ObjectMapper().writeValueAsString(gameService.searchGame(gameName)));
+            } else { // return top game
+                response.getWriter().print(new ObjectMapper().writeValueAsString(gameService.topGames(0)));
+            }
+        } catch (TwitchException e) {
+            throw new ServletException(e);
+        }
+    }
+
+
+
+
+}
+
+
